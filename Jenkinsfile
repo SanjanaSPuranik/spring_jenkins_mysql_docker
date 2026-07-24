@@ -127,7 +127,7 @@ pipeline {
             echo 'Pipeline execution failed.'
         }
         always {
-            cleanWs()
+              echo "Build completed"
         }
     }
 }
