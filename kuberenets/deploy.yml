@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: production
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: mysql
+
+  template:
+    metadata:
+      labels:
+        app: mysql
+
+    spec:
+      containers:
+
+      - name: mysql
+        image: mysql:8.0
+
+        ports:
+        - containerPort: 3306
+
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "1234"
+
+        - name: MYSQL_DATABASE
+          value: "myapplication"
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: springboot-app
+  namespace: production
+
+
+spec:
+
+  replicas: 2
+
+
+  selector:
+    matchLabels:
+      app: springboot-app
+
+
+  template:
+
+    metadata:
+      labels:
+        app: springboot-app
+
+
+    spec:
+
+      containers:
+
+      - name: springboot-app
+
+        image: sanjanaspuranik/springboot-app:v1
+
+        imagePullPolicy: Always
+
+
+        ports:
+
+        - containerPort: 8080
+
+
+        env:
+
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://mysql-service:3306/myapplication?createDatabaseIfNotExist=true
+
+
+        - name: SPRING_DATASOURCE_USERNAME
+          value: root
+
+
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "1234"

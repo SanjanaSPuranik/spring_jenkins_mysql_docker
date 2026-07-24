@@ -5,7 +5,7 @@ pipeline {
         choice(
             name: 'ACTION',
             choices: ['DEPLOY', 'REMOVE'],
-            description: 'Choose whether to deploy or remove containers'
+            description: 'Deploy or Remove Kubernetes resources'
         )
     }
 
@@ -14,50 +14,83 @@ pipeline {
     }
 
     environment {
-        APP_NAME = "springboot-app"
+        IMAGE_NAME = "YOUR_DOCKERHUB_USERNAME/springboot-app:v1"
     }
 
     stages {
+
         stage('Build JAR') {
             when {
                 expression { params.ACTION == 'DEPLOY' }
             }
             steps {
-                echo "Building Spring Boot JAR..."
                 sh 'mvn clean package'
             }
         }
 
-        stage('Deploy Application') {
+        stage('Build Docker Image') {
             when {
                 expression { params.ACTION == 'DEPLOY' }
             }
             steps {
-                echo "Deploying Docker Containers..."
-                sh 'docker compose up --build -d'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Remove Application') {
+        stage('Docker Login') {
+            when {
+                expression { params.ACTION == 'DEPLOY' }
+            }
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            when {
+                expression { params.ACTION == 'DEPLOY' }
+            }
+            steps {
+                sh 'docker push $IMAGE_NAME'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            when {
+                expression { params.ACTION == 'DEPLOY' }
+            }
+            steps {
+                sh 'kubectl apply -f kubernetes/'
+            }
+        }
+
+        stage('Remove from Kubernetes') {
             when {
                 expression { params.ACTION == 'REMOVE' }
             }
             steps {
-                echo "Stopping and Removing Containers..."
-                sh 'docker compose down'
-                sh 'docker image prune -af'
+                sh 'kubectl delete -f kubernetes/ --ignore-not-found'
             }
         }
     }
+
     post {
         success {
-            echo "Pipeline executed successfully..."
+            echo 'Pipeline executed successfully.'
         }
         failure {
-            echo "Pipeline execution failed..."
+            echo 'Pipeline execution failed.'
         }
         always {
-            echo "Pipeline completed..."
+            cleanWs()
         }
     }
 }
