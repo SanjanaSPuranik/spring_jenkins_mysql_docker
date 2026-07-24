@@ -34,7 +34,7 @@ pipeline {
             }
             steps {
                 echo "Deploying Docker Containers..."
-                sh 'docker-compose up --build -d'
+                sh sh 'docker compose up --build -d'
             }
         }
 
