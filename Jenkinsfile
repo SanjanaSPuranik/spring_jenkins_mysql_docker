@@ -87,7 +87,7 @@ pipeline {
                 expression { params.DEPLOY_DB }
             }
             steps {
-                sh 'kubectl apply -f kuberenetes/'
+                sh 'kubectl apply -f kubernetes/'
             }
         }
 
@@ -96,7 +96,7 @@ pipeline {
                 expression { params.DEPLOY_APP }
             }
             steps {
-                sh 'kubectl apply -f kuberenets/'
+                sh 'kubectl apply -f kubernets/'
             }
         }
 
@@ -105,7 +105,7 @@ pipeline {
                 expression { params.REMOVE_APP }
             }
             steps {
-                sh 'kubectl delete -f kuberenetes/ --ignore-not-found'
+                sh 'kubectl delete -f kubernetes/ --ignore-not-found'
             }
         }
 
@@ -114,7 +114,7 @@ pipeline {
                 expression { params.REMOVE_DB }
             }
             steps {
-                sh 'kubectl delete -f kuberenetes/ --ignore-not-found'
+                sh 'kubectl delete -f kubernetes/ --ignore-not-found'
             }
         }
     }
