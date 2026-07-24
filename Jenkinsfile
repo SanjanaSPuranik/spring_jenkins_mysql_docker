@@ -96,7 +96,11 @@ pipeline {
                 expression { params.DEPLOY_APP }
             }
             steps {
-                sh 'kubectl apply -f kubernetes/'
+                sh '''
+                kubectl apply -f kubernetes/ns.yml
+                kubectl apply -f kubernetes/service.yml
+                kubectl apply -f kubernetes/deploy.yml
+                '''
             }
         }
 
