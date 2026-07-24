@@ -2,10 +2,29 @@ pipeline {
     agent any
 
     parameters {
-        choice(
-            name: 'ACTION',
-            choices: ['DEPLOY', 'REMOVE'],
-            description: 'Deploy or Remove Kubernetes resources'
+
+        booleanParam(
+            name: 'DEPLOY_APP',
+            defaultValue: false,
+            description: 'Deploy Application'
+        )
+
+        booleanParam(
+            name: 'DEPLOY_DB',
+            defaultValue: false,
+            description: 'Deploy Database'
+        )
+
+        booleanParam(
+            name: 'REMOVE_APP',
+            defaultValue: false,
+            description: 'Remove Application'
+        )
+
+        booleanParam(
+            name: 'REMOVE_DB',
+            defaultValue: false,
+            description: 'Remove Database'
         )
     }
 
@@ -14,14 +33,14 @@ pipeline {
     }
 
     environment {
-        IMAGE_NAME = "YOUR_DOCKERHUB_USERNAME/springboot-app:v1"
+        IMAGE_NAME = "sanjanaspuranik/springboot-app:v1"
     }
 
     stages {
 
         stage('Build JAR') {
             when {
-                expression { params.ACTION == 'DEPLOY' }
+                expression { params.DEPLOY_APP }
             }
             steps {
                 sh 'mvn clean package'
@@ -30,7 +49,7 @@ pipeline {
 
         stage('Build Docker Image') {
             when {
-                expression { params.ACTION == 'DEPLOY' }
+                expression { params.DEPLOY_APP }
             }
             steps {
                 sh 'docker build -t $IMAGE_NAME .'
@@ -39,7 +58,7 @@ pipeline {
 
         stage('Docker Login') {
             when {
-                expression { params.ACTION == 'DEPLOY' }
+                expression { params.DEPLOY_APP }
             }
             steps {
                 withCredentials([usernamePassword(
@@ -56,25 +75,43 @@ pipeline {
 
         stage('Push Docker Image') {
             when {
-                expression { params.ACTION == 'DEPLOY' }
+                expression { params.DEPLOY_APP }
             }
             steps {
                 sh 'docker push $IMAGE_NAME'
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy Database') {
             when {
-                expression { params.ACTION == 'DEPLOY' }
+                expression { params.DEPLOY_DB }
             }
             steps {
                 sh 'kubectl apply -f kubernetes/'
             }
         }
 
-        stage('Remove from Kubernetes') {
+        stage('Deploy Application') {
             when {
-                expression { params.ACTION == 'REMOVE' }
+                expression { params.DEPLOY_APP }
+            }
+            steps {
+                sh 'kubectl apply -f kubernetes/'
+            }
+        }
+
+        stage('Remove Application') {
+            when {
+                expression { params.REMOVE_APP }
+            }
+            steps {
+                sh 'kubectl delete -f kubernetes/ --ignore-not-found'
+            }
+        }
+
+        stage('Remove Database') {
+            when {
+                expression { params.REMOVE_DB }
             }
             steps {
                 sh 'kubectl delete -f kubernetes/ --ignore-not-found'
