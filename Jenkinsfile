@@ -87,7 +87,7 @@ pipeline {
                 expression { params.DEPLOY_DB }
             }
             steps {
-                sh 'kubectl apply -f kubernetes/'
+                sh 'kubectl apply -f kuberenetes/'
             }
         }
 
